@@ -81,6 +81,32 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+        input[type="file"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="file"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-section {
+            border-top: 1px solid #dee2e6;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .upload-section-hidden {
+            display: none;
+        }
+
         button {
             padding: 12px 24px;
             font-size: 14px;
@@ -350,6 +376,15 @@
                 <button class="btn-secondary" onclick="clearResults()">🗑️ Clear</button>
             </div>
             <div class="status" id="status"></div>
+
+            <div class="upload-section upload-section-hidden" id="uploadSection">
+                <div class="input-group">
+                    <label for="votingDataFile">Upload voting_data.csv:</label>
+                    <input type="file" id="votingDataFile" accept=".csv" />
+                    <button class="btn-primary" onclick="handleFileUpload()">📤 Upload</button>
+                </div>
+                <div class="status" id="uploadStatus"></div>
+            </div>
         </div>
 
         <div class="alerts-container" id="alerts"></div>
@@ -386,12 +421,63 @@
                 }
                 console.log('✅ Loaded voting data for', Object.keys(votingData).length, 'users');
                 document.getElementById('status').innerHTML = `✅ Loaded ${Object.keys(votingData).length} voters from voting_data.csv`;
+                document.getElementById('uploadSection').classList.add('upload-section-hidden');
             } catch (error) {
                 console.warn('⚠️ Could not load voting_data.csv:', error.message);
-                document.getElementById('status').innerHTML =
-                    '⚠️ <strong>voting_data.csv not found.</strong> Copy <code>voting_data.example.csv</code> to <code>voting_data.csv</code> and fill in your participants. ' +
-                    'Analysis will still work but all users will appear as "Not Registered".';
+                document.getElementById('uploadSection').classList.remove('upload-section-hidden');
             }
+        }
+
+        // Handle file upload
+        function handleFileUpload() {
+            const fileInput = document.getElementById('votingDataFile');
+            const file = fileInput.files[0];
+            const uploadStatus = document.getElementById('uploadStatus');
+
+            if (!file) {
+                uploadStatus.innerHTML = '❌ Please select a file first';
+                return;
+            }
+
+            if (!file.name.endsWith('.csv')) {
+                uploadStatus.innerHTML = '❌ Please select a CSV file';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csvText = e.target.result;
+                    const lines = csvText.trim().split('\n');
+                    let loadedCount = 0;
+
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        const [github, entity] = parseCSVLine(lines[i]);
+                        if (github && entity) {
+                            votingData[github.toLowerCase()] = entity.trim();
+                            loadedCount++;
+                        }
+                    }
+
+                    console.log('✅ Loaded voting data for', loadedCount, 'users from file upload');
+                    uploadStatus.innerHTML = `✅ Successfully loaded ${loadedCount} voters from ${file.name}`;
+                    document.getElementById('status').innerHTML = `✅ Loaded ${loadedCount} voters from uploaded file`;
+                    
+                    // Reset file input and hide upload section
+                    fileInput.value = '';
+                    document.getElementById('uploadSection').classList.add('upload-section-hidden');
+                } catch (error) {
+                    console.error('❌ Error parsing CSV file:', error);
+                    uploadStatus.innerHTML = `❌ Error parsing CSV file: ${error.message}`;
+                }
+            };
+
+            reader.onerror = function() {
+                uploadStatus.innerHTML = '❌ Error reading file';
+            };
+
+            reader.readAsText(file);
         }
 
         // Parse CSV line

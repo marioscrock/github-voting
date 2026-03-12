@@ -19,6 +19,15 @@ No backend required — uses the public GitHub API and runs entirely in the brow
 
 ### 1. Create your voter list
 
+You can either upload a CSV file directly in the app, or create a local file.
+
+**Option A: Upload CSV via the Browser (Easiest)**
+- When you open the app, if `voting_data.csv` is not found, an upload form will appear
+- Select your CSV file and click **📤 Upload**
+- The app will load the data and remember it for the session
+
+**Option B: Create a Local File**
+
 Copy the example file and fill in your participants:
 
 ```bash
@@ -55,7 +64,7 @@ npx http-server
 
 ### 3. Deploy to GitHub Pages
 
-Create a repository from this template-repository. Configure voting using `voting_data.csv`.
+Create a repository from this template-repository. You can configure default voting data creating a `voting_data.csv` file.
 
 > ⚠️ `voting_data.csv` is in `.gitignore` by default to protect participant data.  
 > Add it to your push only if the data is safe to make public.

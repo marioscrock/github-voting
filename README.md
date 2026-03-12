@@ -55,19 +55,10 @@ npx http-server
 
 ### 3. Deploy to GitHub Pages
 
+Create a repository from this template-repository. Configure voting using `voting_data.csv`.
+
 > ⚠️ `voting_data.csv` is in `.gitignore` by default to protect participant data.  
 > Add it to your push only if the data is safe to make public.
-
-```bash
-git init
-git add voting-validator.html voting_data.example.csv .gitignore README.md
-# only include voting_data.csv if you want it public:
-# git add voting_data.csv
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPO
-git push -u origin main
-```
 
 Enable GitHub Pages in repository **Settings → Pages → Deploy from main branch**.
 
@@ -100,23 +91,7 @@ App will be live at: `https://YOUR-USERNAME.github.io/YOUR-REPO/voting-validator
 
 ## Supported Country Flags
 
-Any two-letter ISO 3166-1 alpha-2 code that maps to a flag emoji will render automatically. Pre-configured ones:
-
-| Code | Country | Flag |
-|------|---------|------|
-| SI | Slovenia | 🇸🇮 |
-| NL | Netherlands | 🇳🇱 |
-| AT | Austria | 🇦🇹 |
-| DK | Denmark | 🇩🇰 |
-| SE | Sweden | 🇸🇪 |
-| BE | Belgium | 🇧🇪 |
-| DE | Germany | 🇩🇪 |
-| IT | Italy | 🇮🇹 |
-| UK | United Kingdom | 🇬🇧 |
-| CZ | Czech Republic | 🇨🇿 |
-| CH | Switzerland | 🇨🇭 |
-| NO | Norway | 🇳🇴 |
-
+Any two-letter ISO 3166-1 alpha-2 code that maps to a flag emoji will render automatically.
 To add more, extend the `COUNTRY_FLAGS` object at the top of `voting-validator.html`.
 
 ## API Notes

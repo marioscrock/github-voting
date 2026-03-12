@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GitHub Comment Reactions Analyzer">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+    <title>GitHub Comment Reactions Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Color Emoji', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #dee2e6;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            min-width: 120px;
+            color: #333;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 15px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            white-space: nowrap;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Color Emoji', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .btn-primary {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .status {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .alerts-container {
+            margin-bottom: 30px;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+
+        .alert-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Color Emoji', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .duplicate-list {
+            list-style: none;
+            margin-top: 8px;
+        }
+
+        .duplicate-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .duplicate-list li:last-child {
+            border-bottom: none;
+        }
+
+        .duplicate-users {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Color Emoji', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .stat-box.thumbs-up {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .stat-box.thumbs-down {
+            background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Color Emoji', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        thead {
+            background-color: #667eea;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .duplicate-row {
+            background-color: #ffe0e0 !important;
+        }
+
+        .unknown-row {
+            background-color: #fff8e1 !important;
+        }
+
+        .flag-country {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .country-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            padding: 8px 10px;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 24px;
+            font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            letter-spacing: 2px;
+        }
+
+        .country-name {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 16px;
+        }
+
+        .reaction-badge {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 3px;
+            margin: 2px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Color Emoji', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗳️ GitHub Comment Reactions Analyzer</h1>
+        <p class="subtitle">Fetch reactions and detect voting conflicts</p>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="commentLink">GitHub Comment Link:</label>
+                <input type="text" id="commentLink" placeholder="https://github.com/owner/repo/issues/123#issuecomment-456" />
+                <button class="btn-primary" id="analyzeBtn" onclick="analyzeComment()">🔍 Analyze</button>
+                <button class="btn-secondary" onclick="clearResults()">🗑️ Clear</button>
+            </div>
+            <div class="status" id="status"></div>
+        </div>
+
+        <div class="alerts-container" id="alerts"></div>
+
+        <div class="stats" id="stats"></div>
+
+        <div id="resultsContainer"></div>
+    </div>
+
+    <script>
+        // Country code to flag emoji mapping
+        const COUNTRY_FLAGS = {
+            'SI': '🇸🇮', 'NL': '🇳🇱', 'AT': '🇦🇹', 'DK': '🇩🇰',
+            'SE': '🇸🇪', 'BE': '🇧🇪', 'DE': '🇩🇪', 'IT': '🇮🇹',
+            'UK': '🇬🇧', 'CZ': '🇨🇿', 'CH': '🇨🇭', 'NO': '🇳🇴'
+        };
+
+        let votingData = {};
+
+        // Load voting data from CSV
+        async function loadVotingData() {
+            try {
+                const response = await fetch('voting_data.csv');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const csvText = await response.text();
+                const lines = csvText.trim().split('\n');
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const [github, entity] = parseCSVLine(lines[i]);
+                    if (github && entity) {
+                        votingData[github.toLowerCase()] = entity.trim();
+                    }
+                }
+                console.log('✅ Loaded voting data for', Object.keys(votingData).length, 'users');
+                document.getElementById('status').innerHTML = `✅ Loaded ${Object.keys(votingData).length} voters from voting_data.csv`;
+            } catch (error) {
+                console.warn('⚠️ Could not load voting_data.csv:', error.message);
+                document.getElementById('status').innerHTML =
+                    '⚠️ <strong>voting_data.csv not found.</strong> Copy <code>voting_data.example.csv</code> to <code>voting_data.csv</code> and fill in your participants. ' +
+                    'Analysis will still work but all users will appear as "Not Registered".';
+            }
+        }
+
+        // Parse CSV line
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+
+
+        // Parse GitHub comment link
+        function parseCommentLink(url) {
+            // Format: https://github.com/owner/repo/issues/123#issuecomment-456
+            const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/issues\/\d+#issuecomment-(\d+)/);
+            if (match) {
+                return { owner: match[1], repo: match[2], commentId: match[3] };
+            }
+            return null;
+        }
+
+        // Fetch reactions from GitHub API (public endpoint)
+        async function fetchReactions(owner, repo, commentId) {
+            const response = await fetch(
+                `https://api.github.com/repos/${owner}/${repo}/issues/comments/${commentId}/reactions?per_page=100`,
+                {
+                    headers: {
+                        'Accept': 'application/vnd.github+json',
+                        'X-GitHub-Api-Version': '2022-11-28'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Comment not found. Make sure the URL is correct.');
+                } else if (response.status === 403) {
+                    throw new Error('Rate limited. GitHub public API allows 60 requests/hour per IP.');
+                } else if (response.status === 422) {
+                    throw new Error('Invalid comment format.');
+                }
+                throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json();
+        }
+
+        // Analyze comment reactions
+        async function analyzeComment() {
+            const url = document.getElementById('commentLink').value.trim();
+            if (!url) {
+                showAlert('Error', 'Please enter a GitHub comment link', 'error');
+                return;
+            }
+
+            const parsed = parseCommentLink(url);
+            if (!parsed) {
+                showAlert('Error', 'Invalid GitHub comment URL format', 'error');
+                return;
+            }
+
+            document.getElementById('analyzeBtn').disabled = true;
+            showStatus('<div class="spinner"></div> Fetching reactions...');
+
+            try {
+                const reactions = await fetchReactions(parsed.owner, parsed.repo, parsed.commentId);
+                
+                if (!Array.isArray(reactions) || reactions.length === 0) {
+                    showAlert('Info', 'No reactions found on this comment', 'warning');
+                    document.getElementById('analyzeBtn').disabled = false;
+                    return;
+                }
+
+                processReactions(reactions);
+                showStatus('✅ Analysis complete');
+            } catch (error) {
+                showAlert('Error', error.message, 'error');
+                showStatus('');
+            } finally {
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        }
+
+        // Process and display reactions
+        function processReactions(reactions) {
+            const reactionMap = {};
+            const countryDuplicates = {};
+            const unknownUsers = {};
+
+            // Group reactions by user and emoji (only for known entities)
+            reactions.forEach(reaction => {
+                const username = reaction.user.login.toLowerCase();
+                const emoji = reaction.content;
+                const entity = votingData[username];
+                const isUnknown = !entity;
+
+                // Track unknown users (but don't count their reactions)
+                if (isUnknown) {
+                    if (!unknownUsers[username]) {
+                        unknownUsers[username] = reaction.user.login;
+                    }
+                    return; // Skip adding to reactionMap and counting
+                }
+
+                // Only process registered users
+                if (!reactionMap[username]) {
+                    reactionMap[username] = { username: reaction.user.login, reactions: [], entity: entity };
+                }
+                reactionMap[username].reactions.push(emoji);
+
+                // Track entity duplicates (only for known entities)
+                if (!countryDuplicates[entity]) {
+                    countryDuplicates[entity] = [];
+                }
+                if (!countryDuplicates[entity].includes(reaction.user.login)) {
+                    countryDuplicates[entity].push(reaction.user.login);
+                }
+            });
+
+            // Find entities with multiple voters
+            const duplicates = {};
+            Object.keys(countryDuplicates).forEach(entity => {
+                if (countryDuplicates[entity].length > 1) {
+                    duplicates[entity] = countryDuplicates[entity];
+                }
+            });
+
+            // Count thumbs up and down (only from registered users)
+            const registeredReactions = reactions.filter(r => votingData[r.user.login.toLowerCase()]);
+            const thumbsUp = registeredReactions.filter(r => r.content === '+1').length;
+            const thumbsDown = registeredReactions.filter(r => r.content === '-1').length;
+
+            displayResults(reactionMap, duplicates, thumbsUp, thumbsDown, unknownUsers);
+        }
+
+        // Display results
+        function displayResults(reactionMap, duplicates, thumbsUp, thumbsDown, unknownUsers) {
+            // Display stats
+            document.getElementById('stats').innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-number">${Object.keys(reactionMap).length}</div>
+                    <div class="stat-label">Total Reactions</div>
+                </div>
+                <div class="stat-box thumbs-up">
+                    <div class="stat-number">👍 ${thumbsUp}</div>
+                    <div class="stat-label">Thumbs Up</div>
+                </div>
+                <div class="stat-box thumbs-down">
+                    <div class="stat-number">👎 ${thumbsDown}</div>
+                    <div class="stat-label">Thumbs Down</div>
+                </div>
+                <div class="stat-box" style="background: linear-gradient(135deg, ${Object.keys(duplicates).length > 0 ? '#dc3545 0%, #c82333 100%' : '#28a745 0%, #20c997 100%'});">
+                    <div class="stat-number">${Object.keys(duplicates).length}</div>
+                    <div class="stat-label">Duplicate Countries</div>
+                </div>
+            `;
+
+            // Display alerts
+            const alertsContainer = document.getElementById('alerts');
+            alertsContainer.innerHTML = '';
+
+            // Alert for unknown users
+            if (Object.keys(unknownUsers).length > 0) {
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-warning';
+                alert.innerHTML = `
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-content">
+                        <div class="alert-title">⚠️ UNREGISTERED USERS REACTED</div>
+                        <p>The following users reacted but are not registered in voting_data.csv. <strong>Their votes are not counted:</strong></p>
+                        <ul class="duplicate-list">
+                            ${Object.values(unknownUsers).map(user => `<li>${user}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                alertsContainer.appendChild(alert);
+            }
+
+            // Alert for country duplicates
+            if (Object.keys(duplicates).length === 0 && Object.keys(unknownUsers).length === 0) {
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success';
+                alert.innerHTML = `
+                    <div class="alert-icon">✅</div>
+                    <div class="alert-content">
+                        <div class="alert-title">No Conflicts</div>
+                        <p>All entities represented by at most one voter, and all users are registered.</p>
+                    </div>
+                `;
+                alertsContainer.appendChild(alert);
+            } else if (Object.keys(duplicates).length > 0) {
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-error';
+                alert.innerHTML = `
+                    <div class="alert-icon">⛔</div>
+                    <div class="alert-content">
+                        <div class="alert-title">⛔ VOTING CONFLICTS DETECTED!</div>
+                        <p>Multiple voters from the same entity:</p>
+                        <ul class="duplicate-list">
+                            ${Object.keys(duplicates).map(entity => {
+                                const flagEmoji = COUNTRY_FLAGS[entity];
+                                if (flagEmoji) {
+                                    return `<li><span class="flag-emoji" title="${entity}">${flagEmoji}</span> <span class="duplicate-users">${entity}: ${duplicates[entity].join(', ')}</span></li>`;
+                                } else {
+                                    return `<li><span class="duplicate-users">${entity}: ${duplicates[entity].join(', ')}</span></li>`;
+                                }
+                            }).join('')}
+                        </ul>
+                    </div>
+                `;
+                alertsContainer.appendChild(alert);
+            }
+
+            // Helper function to get display for voting entity
+            function getEntityDisplay(entity) {
+                const flagEmoji = COUNTRY_FLAGS[entity];
+                if (flagEmoji) {
+                    return `<span class="flag-emoji" title="${entity}">${flagEmoji}</span> <span style="color: #666; font-size: 12px;">${entity}</span>`;
+                }
+                return `<span style="color: #333; font-weight: 500;">${entity}</span>`;
+            }
+
+            // Display table
+            const tableRows = Object.values(reactionMap)
+                .sort((a, b) => a.username.localeCompare(b.username))
+                .map(user => {
+                    const isDuplicate = Object.values(duplicates).flat().includes(user.username);
+                    const rowClass = isDuplicate ? 'duplicate-row' : '';
+                    const entityDisplay = getEntityDisplay(user.entity);
+                    return `
+                        <tr class="${rowClass}">
+                            <td><strong>${user.username}</strong></td>
+                            <td><div class="flag-country">${entityDisplay}</div></td>
+                            <td>
+                                ${user.reactions.map(emoji => `<span class="reaction-badge">${emoji}</span>`).join('')}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+            const table = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">GitHub User</th>
+                            <th style="width: 25%;">Voting For</th>
+                            <th style="width: 45%;">Reactions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows.join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('resultsContainer').innerHTML = table;
+        }
+
+        // Show alert
+        function showAlert(title, message, type = 'warning') {
+            const alertsContainer = document.getElementById('alerts');
+            const icons = { 'warning': '⚠️', 'error': '❌', 'success': '✅' };
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `
+                <div class="alert-icon">${icons[type]}</div>
+                <div class="alert-content">
+                    <div class="alert-title">${title}</div>
+                    <p>${message}</p>
+                </div>
+            `;
+            alertsContainer.innerHTML = '';
+            alertsContainer.appendChild(alert);
+        }
+
+        // Show status
+        function showStatus(message) {
+            document.getElementById('status').innerHTML = message;
+        }
+
+        // Clear results
+        function clearResults() {
+            document.getElementById('commentLink').value = '';
+            document.getElementById('alerts').innerHTML = '';
+            document.getElementById('stats').innerHTML = '';
+            document.getElementById('resultsContainer').innerHTML = '';
+            document.getElementById('status').innerHTML = '';
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', async function() {
+            console.log('🚀 App initializing...');
+            await loadVotingData();
+        });
+    </script>
+</body>
+</html>
